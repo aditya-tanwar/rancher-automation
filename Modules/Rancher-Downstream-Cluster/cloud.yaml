@@ -1,0 +1,42 @@
+#cloud-config
+write_files:
+- path: /root/test.sh
+  content: |
+    #!/bin/bash
+
+    if ip link show ens160 &> /dev/null; then
+        interface="ens160"
+    elif ip link show ens192 &> /dev/null;
+    then
+        interface="ens192"
+    else
+        interface="null"
+    fi
+
+    vmtoolsd --cmd 'info-get guestinfo.ovfEnv' > /tmp/ovfenv
+    IPAddress=$(sed -n 's/.*Property oe:key="guestinfo.interface.0.ip.0.address" oe:value="\([^"]*\).*/\1/p' /tmp/ovfenv)
+    SubnetMask=$(sed -n 's/.*Property oe:key="guestinfo.interface.0.ip.0.netmask" oe:value="\([^"]*\).*/\1/p' /tmp/ovfenv)
+    Gateway=$(sed -n 's/.*Property oe:key="guestinfo.interface.0.route.0.gateway" oe:value="\([^"]*\).*/\1/p' /tmp/ovfenv)
+    DNS=$(sed -n 's/.*Property oe:key="guestinfo.dns.servers" oe:value="\([^"]*\).*/\1/p' /tmp/ovfenv)
+
+    cat > /etc/netplan/01-netcfg.yaml <<EOF
+    network:
+      version: 2
+      renderer: networkd
+      ethernets:
+        $interface:
+          addresses:
+            - $IPAddress/24
+          gateway4: $Gateway
+          nameservers:
+              addresses : [$DNS]
+    EOF
+
+    sudo netplan apply
+    sleep 30 
+runcmd:
+- bash /root/test.sh 
+// optional 
+bootcmd:
+- growpart /dev/sda 3
+- lvextend -l +100%FREE /dev/ubuntu-vg/ubuntu-lv -r     
