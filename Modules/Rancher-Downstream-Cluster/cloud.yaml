@@ -36,7 +36,7 @@ write_files:
     sleep 30 
 runcmd:
 - bash /root/test.sh 
-// optional 
+# optional 
 bootcmd:
 - growpart /dev/sda 3
 - lvextend -l +100%FREE /dev/ubuntu-vg/ubuntu-lv -r     
