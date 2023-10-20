@@ -1,6 +1,5 @@
 ### Rancher Downstream cluster deployment with Terraform
 
-This code has been created using terraform to be able to create downstream clusters using the vsphere as the platform. 
-Below are snippets talking about the certain section of the code. 
+This repository focuses on the automation of the rancher UI using ansible and rancher downstream cluster using terraform IAC. 
 
 < This Page is Under process >
