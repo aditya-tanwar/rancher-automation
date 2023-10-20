@@ -1,0 +1,105 @@
+---
+
+# CHECKING THE STATUS OF THE RKE2 SERVICE WHETHER IT IS UP OR NOT
+- name: Checking the status of the rke2 service
+  shell: systemctl status rke2-server.service
+  register: pre_svc_stat
+  ignore_errors: true
+
+- debug:
+    msg: "{{ pre_svc_stat }}"
+
+
+- debug:
+    msg: "The rke2-server.service is already up and running"
+  when: '"active (running)" in pre_svc_stat.stdout'
+
+# Downloading the script on the initial master 
+- name: Downloading and running the rke2 script
+  shell: "curl -sfL https://get.rke2.io | sh -"
+  args:
+    chdir: /tmp
+  register: rke2_script
+  when: '"active (running)" not in pre_svc_stat.stdout'
+
+- name: Starting a enabling the service
+  service:
+    name: rke2-server.service
+    enabled: true
+    state: restarted
+  register: svc_enable
+  when: '"active (running)" not in pre_svc_stat.stdout'
+
+- name: Checking the status of the service
+  shell: "systemctl status rke2-server.service"
+  register: svc_status
+  when: '"active (running)" not in pre_svc_stat.stdout'
+
+- name: Check if file exists using stat module
+  stat:
+    path: "/usr/local/bin/{{ item }}"
+  loop:
+  - kubectl
+  - crictl
+  register: file_status
+  when: '"active (running)" not in pre_svc_stat.stdout'
+
+- name: Print file status
+  debug:
+    var: file_status.stat.exists
+  when: '"active (running)" not in pre_svc_stat.stdout'
+
+- name: Copying the files to the desired location
+  copy:
+    src: '/var/lib/rancher/rke2/bin/{{ item }}'
+    dest: '/usr/local/bin/{{ item }}'
+    mode: u+rwx,g-rwx,o-rwx
+    remote_src: true
+  loop:
+  - kubectl
+  - crictl
+  register: copy_files
+  when: '"active (running)" not in pre_svc_stat.stdout'
+  # a conditional statement if the above files doesn't exist
+
+- name: adding a script to add the kubectl into the path 
+  copy: 
+    src: kubectl.sh
+    dest: '/etc/profile.d/kubectl.sh'
+  register: kubectl_path
+  when: '"active (running)" not in pre_svc_stat.stdout'
+
+- debug: 
+    var: kubectl_path
+  when: '"active (running)" not in pre_svc_stat.stdout'
+
+- name: Create the .kube dir
+  shell: "cd && mkdir .kube"
+  register: dir_create 
+  when: '"active (running)" not in pre_svc_stat.stdout'
+
+- debug: 
+    var: dir_create
+  when: '"active (running)" not in pre_svc_stat.stdout'
+
+- name: copying the kubeconfig to the default location
+  copy:
+    src: '/etc/rancher/rke2/rke2.yaml'
+    dest: '~/.kube/config'
+    remote_src: true
+  register: kubeconfig_out
+  when: '"active (running)" not in pre_svc_stat.stdout'
+
+- name: Run the command to check the node has been registered as the master in the cluster
+  shell: "kubectl get nodes"
+  register: nodes_stat
+  
+- name: check the token of the kubernetes cluster
+  shell: "cat /var/lib/rancher/rke2/server/node-token"
+  register: token_out
+
+- debug:
+    var: token_out
+
+      #- set_fact:
+      #master_token: "{{ token_out.stdout }}"

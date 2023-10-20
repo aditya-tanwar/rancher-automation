@@ -1,0 +1,52 @@
+# Tasks to add the worker agent to the initial master 
+
+
+# CHECKING THE STATUS OF THE RKE2 SERVICE WHETHER IT IS UP OR NOT
+- name: Checking the status of the rke2 service
+  shell: systemctl status rke2-agent.service
+  register: pre_svc_stat
+  ignore_errors: true
+
+- debug:
+    msg: "{{ pre_svc_stat }}"
+
+- debug:
+    msg: "The rke2-agent.service is up and running"
+  when: '"active (running)" in pre_svc_stat.stdout'
+
+- name: Downloading and running the rke2 script
+  shell: 'curl -sfL https://get.rke2.io | INSTALL_RKE2_TYPE="agent" sh -'
+  args:
+    chdir: /tmp
+  register: rke2_script
+  when: '"active (running)" not in pre_svc_stat.stdout'
+
+- name: Starting a enabling the service
+  shell: " systemctl enable rke2-agent.service"
+  register: svc_enable
+  when: '"active (running)" not in pre_svc_stat.stdout'
+
+- name: Creating a directory in the desired location
+  shell: "mkdir -p /etc/rancher/rke2/"
+  register: dir_create
+  when: '"active (running)" not in pre_svc_stat.stdout'
+
+- name: copy the config file
+  template:
+    src: config.yaml.j2
+    dest: /etc/rancher/rke2/config.yaml
+  register: configfile_stat
+  when: '"active (running)" not in pre_svc_stat.stdout'
+
+- name: Starting a enabling the service
+  service:
+    name: rke2-agent.service
+    enabled: true
+    state: restarted
+  register: svc_restart
+  when: '"active (running)" not in pre_svc_stat.stdout'
+
+- name: Checking the status of the service
+  shell: "systemctl status rke2-agent.service"
+  register: svc_status
+  when: '"active (running)" not in pre_svc_stat.stdout'

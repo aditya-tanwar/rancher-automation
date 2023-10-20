@@ -1,0 +1,4 @@
+---
+rancher_url: "example.com"
+rancher_password: "Password"
+rancher_version: "2.7.5"

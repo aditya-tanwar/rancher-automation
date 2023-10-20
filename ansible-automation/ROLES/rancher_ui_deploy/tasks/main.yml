@@ -1,0 +1,50 @@
+# tasks to deploy rancher UI on the cluster
+# this task will run on the Master ( initial ) 
+
+- name: installing helm
+  shell: "curl -L https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash"
+  register: helm_install
+
+- debug:
+    msg: "{{ helm_install }}"
+
+- name: Adding the helm charts
+  shell: "{{ item }}"
+  loop:
+  - "helm repo add rancher-latest https://releases.rancher.com/server-charts/latest"
+  register: helm_repo_add
+
+- debug:
+    msg: "{{ helm_repo_add }}"
+
+# create cattle-system namespace
+- name: Create cattle-system namespace
+  shell: "kubectl create ns cattle-system"
+  register: cattle-system_namespace
+
+- debug:
+    msg: "{{ cattle-system_namespace }}"
+
+# Add private cert
+- name: Create cert secret
+  shell: "kubectl -n cattle-system create secret generic tls-ca --from-file=cacerts.pem=./cacerts.pem"
+  register: cert_secret
+
+- debug:
+    msg: "{{ cert_secret }}"
+
+#Deploy Rancher
+- name: Create cert secret
+  shell: "helm install rancher rancher-latest/rancher --namespace cattle-system --set hostname=rancher.central.lab.rancher.prgx.com --set bootstrapPassword=Password --set replicas=1 --set global.cattle.psp.enabled=false --version=2.7.5 --set ingress.tls.source=secret --set privateCA=true"
+  register: rancher_deploy
+
+- debug:
+    msg: "{{ rancher_deploy }}"
+
+
+- name: Installing the rancher UI
+  shell: "helm upgrade -i rancher rancher-latest/rancher --create-namespace --namespace cattle-system --set hostname={{ rancher_url }} --set bootstrapPassword={{ rancher_password }} --set replicas=1 --set global.cattle.psp.enabled=false --version={{ rancher_version }}"
+  register: rancher_install
+
+- debug:
+    msg: "{{ rancher_install }}"

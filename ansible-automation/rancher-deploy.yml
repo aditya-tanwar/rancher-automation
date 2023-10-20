@@ -1,0 +1,100 @@
+- hosts: localhost
+  pre_tasks: 
+    - name: including the variable file
+      include_vars: ./rancher_variables.yml 
+
+  # THESE TASKS ARE GOING TO CREATE AN IN-MEMORY INVENTORY AND ADD IPs ACCORDINGLY IN THE GROUPS
+  tasks:
+  - set_fact:
+      initial_master: "{{ initial_master_ip }}"
+  - block:
+    - wait_for_connection:
+        timeout: 60
+    - setup:
+      # Task to add the IP in the initial_master group 
+    - add_host:
+        host: "{{ initial_master_ip  }}"
+        groups: initial_master
+        # ansible_user: "{{ username }}"
+        # ansible_password: "{{ password }}"
+      when: initial_master_ip !=  ""
+        #no_log: true
+
+    - add_host:
+        host: "{{ item }}"
+        groups: add_master
+        # ansible_user: "{{ username }}"
+        # ansible_password: "{{ password }}"
+      loop: "{{ add_master_ip }}"
+      when: add_master_ip !=  ""
+        #no_log: true
+
+    - add_host:
+        host: "{{ item }}"
+        groups: add_worker
+        # ansible_user: "{{ username }}"
+        # ansible_password: "{{ password }}"
+      loop: "{{ add_worker_ip }}"
+      when: add_worker_ip !=  ""
+        #no_log: true
+
+
+
+# THIS PLAY WILL DEPLOY AND INITIALIZE THE NODE AS THE INITIAL MASTER IN THE CLUSTER
+- hosts: initial_master
+  become: true
+  pre_tasks: 
+    - name: including the variable file
+      include_vars: ./rancher_variables.yml
+  tasks:
+  - block:
+    - wait_for_connection:
+        timeout: 60
+    - setup:
+    - include_role:
+        name: './ROLES/rke2_master_init'
+    - set_fact:
+        master_token: "{{ token_out.stdout }}"
+
+
+# THIS PLAY IS USED TO ADD THE MASTER NODE TO THE CLUSTER
+- hosts: add_master
+  become: true
+  pre_tasks: 
+    - name: including the variable file
+      include_vars: ./rancher_variables.yml
+  tasks:
+  - block:
+    - wait_for_connection:
+        timeout: 60
+    - setup:
+    - include_role:
+        name: './ROLES/rke2_master_add'
+
+# THIS PLAY IS USED TO ADD THE WORKER NODES TO THE CLUSTER
+- hosts: add_worker
+  become: true
+  pre_tasks: 
+    - name: including the variable file
+      include_vars: ./rancher_variables.yml
+  tasks:
+  - block:
+    - wait_for_connection:
+        timeout: 60
+    - setup:
+    - include_role:
+        name: './ROLES/rke2_worker_add'
+
+ #THIS PLAY IS USED TO DEPLOY RANCHER ON THE CLUSTER
+- hosts: initial_master
+  become: true
+  pre_tasks: 
+    - name: including the variable file
+      include_vars: ./rancher_variables.yml
+  tasks:
+  - block:
+    - wait_for_connection:
+        timeout: 60
+    - setup:
+    - include_role:
+        name: './ROLES/rancher_ui_deploy'

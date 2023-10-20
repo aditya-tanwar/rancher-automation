@@ -1,0 +1,69 @@
+# tasks file for helm-chart
+
+# this step  will create the helm chart for the new service 
+
+- name: "--------CREATING A HELM CHART FOR THE SERVICE----------"
+  shell: helm create "{{ service_name }}"
+  args:
+    chdir: "{{ github_dest }}/helm-chart/common/charts"
+  register: helm_create
+
+- debug:
+    msg: "{{ helm_create }}"
+
+# this step will remove the extra files from the above helm-chart created 
+
+- name: "--------------REMOVAL OF THE EXTRA FILES FROM THE {{ service_name }} HELM CHART------------"
+
+  shell: rm -rf serviceaccount.yaml hpa.yaml ingress.yaml tests NOTES.txt
+  args:
+    chdir: "{{ github_dest }}/helm-chart/common/charts/{{ service_name }}/templates"
+  register: file_removal
+
+- debug:
+    msg: "{{ file_removal }}"
+
+- name: "------------MAKING A CONFIGS DIRECTORY INSIDE THE {{ service_name }} FOLDER---------------"
+  shell: mkdir configs
+  args:
+    chdir: "{{ github_dest }}/helm-chart/common/charts/{{ service_name }}"
+  register: dir_create
+  ignore_errors: true
+
+- debug:
+    msg: "{{ dir_create }}"
+  ignore_errors: true
+
+# this step will add a config file in the configs directory
+
+- name: "----------- CREATION OF FILE IN THE CONFIGS DIRECTORY ----------------"
+  shell: "touch {{ service_name}}-config-dev"
+  args:
+    chdir: "{{ github_dest }}/helm-chart/common/charts/{{service_name}}/configs"
+  register: config_dir_content
+
+- debug:
+    msg: "{{ config_dir_content}}"
+
+- name: "----------- REPLACING THE CONTENT OF THE deployemnt.yaml & service.yaml FILE ----------"
+  copy:
+    src: "{{ item.source }}"
+    dest: "{{ item.dest }}"
+  loop:
+  - {source: 'deployment.yaml', dest: '{{ github_dest }}/helm-chart/common/charts/{{ service_name }}/templates/deployment.yaml'}
+  - {source: 'service.yaml', dest: '{{ github_dest }}/helm-chart/common/charts/{{ service_name }}/templates/service.yaml'}
+  register: replace_content
+
+- debug:
+    msg: "{{ replace_content }}"
+
+- name: "------------ COPYING THE values.yaml.j2 TEMPLATE TO THE {{ service_name }} SERVICE'S HELM CHART -------"
+  template:
+    src: values.yaml.j2
+    dest: "{{ github_dest }}/helm-chart/common/charts/{{ service_name }}/values.yaml"
+  register: copy_template
+
+- debug:
+    msg: "{{ copy_template }}"
+
+
