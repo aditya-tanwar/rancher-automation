@@ -17,7 +17,8 @@
 - debug:
     msg: "{{ helm_repo_add }}"
 
-# create cattle-system namespace
+# Create cattle-system namespace
+
 - name: Create cattle-system namespace
   shell: "kubectl create ns cattle-system"
   register: cattle-system_namespace
@@ -25,19 +26,34 @@
 - debug:
     msg: "{{ cattle-system_namespace }}"
 
-# Add private cert
-- name: Create cert secret
-  shell: "kubectl -n cattle-system create secret generic tls-ca --from-file=cacerts.pem=./cacerts.pem"
+- name: Copy the cacerts.pem to the cluster
+  copy: 
+    src: cacerts.pem
+    dest: '/tmp/cacerts.pem'
+  register: cert_copy
+
+- debug: 
+    msg: "{{ cert_copy }}"
+
+# Add private cert to the cluster 
+
+- name: Adding the private certificate to the cluster 
+  shell: "kubectl -n cattle-system create secret generic tls-ca --from-file=cacerts.pem=/tmp/cacerts.pem"
   register: cert_secret
 
 - debug:
     msg: "{{ cert_secret }}"
 
-#Deploy Rancher
-- name: Create cert secret
+# Deploy Rancher
+
+- name: Installation of Rancher as a workload 
   shell: "helm install rancher rancher-latest/rancher --namespace cattle-system --set hostname={{ rancher_url }} --set bootstrapPassword={{ rancher_password }} --set replicas=1 --set global.cattle.psp.enabled=false --version={{ rancher_version }} --set ingress.tls.source=secret --set privateCA=true"
   register: rancher_deploy
 
 - debug:
     msg: "{{ rancher_deploy }}"
 
+# If you want to update the existing rancher workload ( upgrading the rancher version )
+
+# - name: "Upgradation of Rancher workload"
+#   shell: "helm upgrade rancher rancher-latest/rancher  --namespace cattle-system --version={{ rancher_update_version }}"
