@@ -22,12 +22,10 @@ resource "rancher2_cluster_v2" "foo-rke2" {
     fqdn     = "rancher.rancherlab02.rancher.prgx.com:6443"
   }
 
-// This section below defines the lifecycle of the authorized endpoint ( ACE ) to protect the drifting of its configuration
+// This section below defines the lifecycle of the authorized endpoint ( ACE ) & cloud_credential_secret_name to protect the drifting of its configuration
   
   lifecycle {
-    ignore_changes = [
-        local_auth_endpoint
-    ]
+    ignore_changes = [local_auth_endpoint, cloud_credential_secret_name] 
   }
 
   rke_config {
