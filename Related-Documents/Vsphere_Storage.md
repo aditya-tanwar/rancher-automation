@@ -26,7 +26,10 @@ kubectl describe nodes | grep "ProviderID"
 
 1. Create the namespace “**vmware-system-csi**”
 2. Create a secret “**vsphere-config-secret**” in the above namespace
-3. **Secret file**`csi-vsphere.conf
+3. **Secret file**
+   
+```yaml
+csi-vsphere.conf
 [Global]
 cluster-id = "< cluster id >"
 user = "<username>"
@@ -34,13 +37,14 @@ password = "<password>"
 port = "<port>"
 insecure-flag = "1"
 [VirtualCenter "<vc.example.com>"]
-datacenters = "<datacenter name>"`
+datacenters = "<datacenter name>"
+```
     
     **Note** : The data should look similar to what has been shown below. Copy the cluster-id from the kubeconfig in Rancher. Username & Password is the service account & it’s password
     
-4. Once the secret is created deploy the csi manifests in the above namespace
+5. Once the secret is created deploy the csi manifests in the above namespace
 
-  5. download [https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/v3.0.0/manifests/vanilla/vsphere-csi-driver.yaml](https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/v3.0.0/manifests/vanilla/vsphere-csi-driver.yaml)
+  6. download [https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/v3.0.0/manifests/vanilla/vsphere-csi-driver.yaml](https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/v3.0.0/manifests/vanilla/vsphere-csi-driver.yaml)
 
 1. There are certain changes that has to be added on to the manifest to make it work , the modified file is shown below 
 
