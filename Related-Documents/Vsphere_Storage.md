@@ -8,7 +8,8 @@
 
 [Using vSphere CSI 2.0 with native Kubernetes to encrypt individual Persistent Volumes on vSAN](https://www.youtube.com/watch?v=2Kh875OlQNk)
 
-([VSPHERE%20Storage%20(%20CPI%20&%20CSI%20)%2058a908534ee64b7da89506835f2b8eaf/Untitled.png](https://www.notion.so/image/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F15d4b5d7-a314-4254-9ee8-e96b8782ad41%2Fee222dd4-f0a1-480c-b948-a5f3d0152a03%2FUntitled.png?table=block&id=5e827a88-0df0-4b8a-888c-5e91691b6281&spaceId=15d4b5d7-a314-4254-9ee8-e96b8782ad41&width=1440&userId=da83107e-f11c-4811-bf39-792693ef8e71&cache=v2))
+<img src="https://content.cdntwrk.com/files/aHViPTYzOTc1JmNtZD1pdGVtZWRpdG9yaW1hZ2UmZmlsZW5hbWU9aXRlbWVkaXRvcmltYWdlXzVlZTIzMmY0Y2EwOTQuanBlZyZ2ZXJzaW9uPTAwMDAmc2lnPWViNTQyZTQ4NTQyMDY1NWZlYzM5Y2FmM2Q4MDYxYjFm"
+
 
 ## **NOTE : When doing the vsphere storage deployment on the existing cluster there is no need to install the CPI as by default it is deployed on both centralized cluster and downstream cluster.**
 
