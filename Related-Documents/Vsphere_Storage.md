@@ -10,14 +10,39 @@
 
 <img src="https://content.cdntwrk.com/files/aHViPTYzOTc1JmNtZD1pdGVtZWRpdG9yaW1hZ2UmZmlsZW5hbWU9aXRlbWVkaXRvcmltYWdlXzVlZTIzMmY0Y2EwOTQuanBlZyZ2ZXJzaW9uPTAwMDAmc2lnPWViNTQyZTQ4NTQyMDY1NWZlYzM5Y2FmM2Q4MDYxYjFm">
 
-
 ## **NOTE : When doing the vsphere storage deployment on the existing cluster there is no need to install the CPI as by default it is deployed on both centralized cluster and downstream cluster.**
+
+## **Pre-requisite**
+
+- Use the below command to validate the ProviderID’s are being provided to every node registered in the cluster . As the cluster provisioned from rancher has default cloud provider built in that assigns the IDs to the nodes. Once Validated , proceed with the installation of the CSI
+
+```
+kubectl describe nodes | grep "ProviderID"
+```
+
+![Untitled](VSPHERE%20Storage%20(%20CPI%20&%20CSI%20)%2058a908534ee64b7da89506835f2b8eaf/Untitled%201.png)
 
 ## **Installing the Vsphere CSI on the existing rke2 cluster**
 
-1) download [https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/v3.0.0/manifests/vanilla/vsphere-csi-driver.yaml](https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/v3.0.0/manifests/vanilla/vsphere-csi-driver.yaml)
+1. Create the namespace “**vmware-system-csi**”
+2. Create a secret “**vsphere-config-secret**” in the above namespace
+3. **Secret file**`csi-vsphere.conf
+[Global]
+cluster-id = "< cluster id >"
+user = "<username>"
+password = "<password>"
+port = "<port>"
+insecure-flag = "1"
+[VirtualCenter "<vc.example.com>"]
+datacenters = "<datacenter name>"`
+    
+    **Note** : The data should look similar to what has been shown below. Copy the cluster-id from the kubeconfig in Rancher. Username & Password is the service account & it’s password
+    
+4. Once the secret is created deploy the csi manifests in the above namespace
 
-2) There are certain changes that has to be added on to the manifest to make it work , the modified file is shown below 
+  5. download [https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/v3.0.0/manifests/vanilla/vsphere-csi-driver.yaml](https://raw.githubusercontent.com/kubernetes-sigs/vsphere-csi-driver/v3.0.0/manifests/vanilla/vsphere-csi-driver.yaml)
+
+1. There are certain changes that has to be added on to the manifest to make it work , the modified file is shown below 
 
 ```yaml
 apiVersion: storage.k8s.io/v1
@@ -656,46 +681,9 @@ metadata:
   uid: 3e5e7c80-7a04-4e1c-81eb-5c22911416ac
 ```
 
-**secret file** 
+**Note : Once it is successfully deployed , we can use it as the provisioner in the storage class** 
 
-```yaml
-apiVersion: v1
-data:
-  csi-vsphere.conf: >-
-    W0dsb2JhbF0KY2x1c3Rlci1pZCA9ICJjLW0tZnJtMm1qZngiCnVzZXIgPSAic3ZjcmFuY2hlcmRldkBhbWVyLnByZ3guY29tIgpwYXNzd29yZCA9ICJfQCxNdTQoKkpoTTtIeV9SNTclZk4xLFkiCnBvcnQgPSAiNDQzIgppbnNlY3VyZS1mbGFnID0gIjEiCgpbVmlydHVhbENlbnRlciAidmMucHJneC5jb20iXQpkYXRhY2VudGVycyA9ICJBVEwtRU5URVJQUklTRSIK
-kind: Secret
-metadata:
-  labels:
-    app.kubernetes.io/managed-by: Helm
-  name: vsphere-config-secret
-  namespace: vmware-system-csi
-```
-
-Note :  The data in the storage should look like this 
-
-```bash
-csi-vsphere.conf
-[Global]
-
-cluster-id = "c-m-frm2mjfx"
-
-user = "username"
-
-password = "password"
-
-port = "443"
-
-insecure-flag = "1"
-
-[VirtualCenter "vc.example.com"]
-
-datacenters = "ATL-ENTERPRISE"
-```
-
-3) Create the namespace “vmware-system-csi” 
-
-4) Create a secret “vsphere-config-secret” in the above namespace 
-
-5) Once the secret is created deploy the csi manifests in the above namespace
-
-**Note : Once it is successfully deployed , we can use it as the provisioner in the storage class**
+1. Create storage class under the same namespace. Go to Storage → Storage Class. Click on Create, give a unique name.
+    1. For non prod clusters, select Reclaim Policy as “Delete volumes and underlying device when volume claim is deleted“
+    2. For prod clusters, select Reclaim Policy as “Retain the volume for manual cleanup“
+    3. Select Allow Volume Expansion to “Enabled”
