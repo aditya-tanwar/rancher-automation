@@ -28,7 +28,7 @@ kubectl describe nodes | grep "ProviderID"
 2. Create a secret “**vsphere-config-secret**” in the above namespace
 3. **Secret file**
    
-```yaml
+```
 csi-vsphere.conf
 [Global]
 cluster-id = "< cluster id >"
