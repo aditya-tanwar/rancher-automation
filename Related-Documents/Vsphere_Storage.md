@@ -26,7 +26,7 @@ kubectl describe nodes | grep "ProviderID"
 
 1. Create the namespace “**vmware-system-csi**”
 2. Create a secret “**vsphere-config-secret**” in the above namespace
-3. **Secret file**
+3. The content of the secret file should be similar as shown below.
    
 ```
 csi-vsphere.conf
