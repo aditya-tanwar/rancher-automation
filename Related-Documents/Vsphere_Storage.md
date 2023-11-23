@@ -20,7 +20,6 @@
 kubectl describe nodes | grep "ProviderID"
 ```
 
-![Untitled](VSPHERE%20Storage%20(%20CPI%20&%20CSI%20)%2058a908534ee64b7da89506835f2b8eaf/Untitled%201.png)
 
 ## **Installing the Vsphere CSI on the existing rke2 cluster**
 
